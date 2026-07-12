@@ -5,7 +5,7 @@ const createServiceSchema = z.object({
     title: z.string().min(3),
     description: z.string().min(10),
     price: z.number().positive(),
-    categoryId: z.string().uuid(),
+    categoryId: z.uuid(),
   }),
 });
 
