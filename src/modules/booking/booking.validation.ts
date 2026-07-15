@@ -1,4 +1,5 @@
 import { z } from "zod";
+
 const createBookingSchema = z.object({
   body: z.object({
     serviceId: z.uuid(),
