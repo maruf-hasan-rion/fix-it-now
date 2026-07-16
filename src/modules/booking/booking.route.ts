@@ -21,6 +21,12 @@ router.get(
   BookingController.getMyBookings,
 );
 
+router.patch(
+  "/:id/cancel",
+  auth(Role.CUSTOMER),
+  BookingController.cancelBooking,
+);
+
 // technician only route
 router.get(
   "/technician",

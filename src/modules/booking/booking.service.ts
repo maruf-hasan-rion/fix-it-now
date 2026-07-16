@@ -1,3 +1,4 @@
+import { BookingStatus } from "../../../generated/prisma/enums";
 import { prisma } from "../../lib/prisma";
 import AppError from "../../utils/AppError";
 import type { IBooking } from "./booking.interface";
@@ -59,6 +60,50 @@ const getSingleBooking = async (bookingId: string) => {
   return booking;
 };
 
+const cancelBookingIntoDB = async (bookingId: string, userId: string) => {
+  const booking = await prisma.booking.findUnique({
+    where: {
+      id: bookingId,
+    },
+  });
+
+  if (!booking) {
+    throw new AppError(httpStatus.NOT_FOUND, "Booking not found");
+  }
+
+  if (booking.customerId !== userId) {
+    throw new AppError(httpStatus.FORBIDDEN, "Unauthorized");
+  }
+
+  if (
+    booking.status === BookingStatus.IN_PROGRESS ||
+    booking.status === BookingStatus.COMPLETED
+  ) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      `Booking cannot be cancelled when status is ${booking.status}`,
+    );
+  }
+
+  if (booking.status === BookingStatus.CANCELLED) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "Booking has already been cancelled",
+    );
+  }
+
+  const result = await prisma.booking.update({
+    where: {
+      id: bookingId,
+    },
+    data: {
+      status: BookingStatus.CANCELLED,
+    },
+  });
+
+  return result;
+};
+
 const getTechnicianBookings = async (technicianId: string) => {
   const profile = await prisma.technicianProfile.findUnique({
     where: {
@@ -116,6 +161,7 @@ export const BookingService = {
   createBooking,
   getAllBookings,
   getSingleBooking,
+  cancelBookingIntoDB,
   getTechnicianBookings,
   updateStatus,
 };
