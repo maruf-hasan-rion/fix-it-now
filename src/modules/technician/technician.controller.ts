@@ -23,6 +23,24 @@ const createProfile = catchAsync(
   },
 );
 
+const updateAvailability = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const userId = req.user?.id as string;
+
+    const result = await technicianService.updateAvailabilityIntoDB(
+      userId,
+      req.body,
+    );
+
+    sendResponse(res, {
+      success: true,
+      statusCode: httpStatus.OK,
+      message: "Availability updated successfully",
+      data: result,
+    });
+  },
+);
+
 const updateProfile = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const userId = req.user?.id as string;
@@ -70,6 +88,7 @@ const getAllTechnicians = catchAsync(
 );
 export const TechnicianController = {
   createProfile,
+  updateAvailability,
   updateProfile,
   getMyProfile,
   getAllTechnicians,

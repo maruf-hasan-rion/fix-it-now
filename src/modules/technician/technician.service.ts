@@ -1,8 +1,11 @@
 import { prisma } from "../../lib/prisma";
 import type {
   ITechnicianProfile,
+  IUpdateAvailability,
   IUpdateTechnicianProfile,
 } from "./technician.interface";
+import AppError from "../../utils/AppError";
+import httpStatus from "http-status";
 
 const createProfileIntoDB = async (
   payload: ITechnicianProfile,
@@ -26,6 +29,36 @@ const createProfileIntoDB = async (
   });
   return technician;
 };
+
+const updateAvailabilityIntoDB = async (
+  userId: string,
+  payload: IUpdateAvailability,
+) => {
+  const technicianProfile = await prisma.technicianProfile.findUnique({
+    where: {
+      userId,
+    },
+  });
+
+  if (!technicianProfile) {
+    throw new AppError(httpStatus.NOT_FOUND, "Technician profile not found");
+  }
+
+  const result = await prisma.technicianProfile.update({
+    where: {
+      userId,
+    },
+    data: {
+      availability: payload.availability,
+      ...(payload.isAvailable !== undefined && {
+        isAvailable: payload.isAvailable,
+      }),
+    },
+  });
+
+  return result;
+};
+
 const updateProfileIntoDB = async (
   payload: IUpdateTechnicianProfile,
   userId: string,
@@ -68,6 +101,7 @@ const getAllTechnicians = async () => {
 
 export const technicianService = {
   createProfileIntoDB,
+  updateAvailabilityIntoDB,
   updateProfileIntoDB,
   getMyProfileFromDB,
   getAllTechnicians,

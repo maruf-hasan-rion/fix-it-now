@@ -18,7 +18,15 @@ const updateTechnicianSchema = z.object({
   }),
 });
 
+const updateAvailabilitySchema = z.object({
+  body: z.object({
+    availability: z.string().min(1),
+    isAvailable: z.boolean().optional(),
+  }),
+});
+
 export const TechnicianValidation = {
   createTechnicianSchema,
   updateTechnicianSchema,
+  updateAvailabilitySchema,
 };

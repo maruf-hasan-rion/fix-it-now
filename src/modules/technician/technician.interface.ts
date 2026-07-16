@@ -5,6 +5,11 @@ export interface ITechnicianProfile {
   location: string;
 }
 
+export interface IUpdateAvailability {
+  availability: string;
+  isAvailable?: boolean;
+}
+
 export interface IUpdateTechnicianProfile {
   bio?: string;
   experience?: number;

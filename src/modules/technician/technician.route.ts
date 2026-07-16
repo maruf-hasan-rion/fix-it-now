@@ -17,6 +17,12 @@ router.post(
   validateRequest(TechnicianValidation.createTechnicianSchema),
   TechnicianController.createProfile,
 );
+router.patch(
+  "/availability",
+  auth(Role.TECHNICIAN),
+  validateRequest(TechnicianValidation.updateAvailabilitySchema),
+  TechnicianController.updateAvailability,
+);
 
 router.patch(
   "/profile",
