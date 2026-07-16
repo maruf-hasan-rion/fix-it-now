@@ -26,11 +26,56 @@ const createService = async (serviceData: IService, technicianId: string) => {
   return service;
 };
 
-const getAllServices = async () => {
+const getAllServices = async (query: Record<string, any>) => {
+  const {
+    searchTerm,
+    categoryId,
+    location,
+    minPrice,
+    maxPrice,
+    sortBy,
+    sortOrder,
+    page = 1,
+    limit = 10,
+  } = query;
+
+  const whereCondition: any = {};
+
+  if (searchTerm) {
+    whereCondition.title = {
+      contains: searchTerm,
+      mode: "insensitive",
+    };
+  }
+
+  if (categoryId) {
+    whereCondition.categoryId = categoryId;
+  }
+
+  if (location) {
+    whereCondition.technician = {
+      location: {
+        contains: location,
+        mode: "insensitive",
+      },
+    };
+  }
+
+  if (minPrice || maxPrice) {
+    whereCondition.price = {};
+    if (minPrice) {
+      whereCondition.price.gte = Number(minPrice);
+    }
+    if (maxPrice) {
+      whereCondition.price.lte = Number(maxPrice);
+    }
+  }
+
   const services = await prisma.service.findMany({
+    where: whereCondition,
+
     include: {
       category: true,
-
       technician: {
         include: {
           user: {
@@ -41,8 +86,31 @@ const getAllServices = async () => {
         },
       },
     },
+    orderBy: sortBy
+      ? {
+          [sortBy]: sortOrder || "asc",
+        }
+      : {
+          createdAt: "desc",
+        },
+
+    skip: (Number(page) - 1) * Number(limit),
+    take: Number(limit),
   });
-  return services;
+
+  const total = await prisma.service.count({
+    where: whereCondition,
+  });
+
+  return {
+    meta: {
+      page: Number(page),
+      limit: Number(limit),
+      total,
+    },
+
+    data: services,
+  };
 };
 
 const getSingleService = async (serviceId: string) => {
