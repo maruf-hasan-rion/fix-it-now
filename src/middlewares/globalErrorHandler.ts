@@ -11,7 +11,9 @@ export const globalErrorHandler = (
   res: Response,
   next: NextFunction,
 ) => {
-  console.error(err);
+  if (res.headersSent) {
+    return next(err);
+  }
 
   let statusCode: number = httpStatus.INTERNAL_SERVER_ERROR;
   let message = "Something went wrong";

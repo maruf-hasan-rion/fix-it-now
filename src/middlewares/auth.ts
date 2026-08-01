@@ -45,7 +45,7 @@ export const auth = (...requiredRoles: Role[]) => {
       );
     }
 
-    const { email, name, id, role } = verifiedToken.data as JwtPayload;
+    const { id, role } = verifiedToken.data as JwtPayload;
 
     if (requiredRoles.length && !requiredRoles.includes(role)) {
       throw new AppError(
@@ -73,6 +73,6 @@ export const auth = (...requiredRoles: Role[]) => {
       role: user.role,
     };
 
-    next();
+   return next();
   });
 };
