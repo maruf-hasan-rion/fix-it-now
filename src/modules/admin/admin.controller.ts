@@ -45,8 +45,23 @@ const getAllBookings = catchAsync(
   },
 );
 
+const getDashboardStats = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const result = await AdminService.getDashboardStatsFromDB();
+
+    sendResponse(res, {
+      success: true,
+      statusCode: httpStatus.OK,
+      message: "Dashboard statistics retrieved successfully",
+      data: result,
+    });
+  },
+);
+
+
 export const AdminController = {
   getAllUsers,
   updateUserStatus,
   getAllBookings,
+   getDashboardStats,
 };

@@ -1,6 +1,7 @@
 import httpStatus from "http-status";
 import { prisma } from "../../lib/prisma";
 import AppError from "../../utils/AppError";
+import { BookingStatus, PaymentStatus } from "../../../generated/prisma/enums";
 
 const getAllUsers = async () => {
   return prisma.user.findMany({
@@ -53,8 +54,107 @@ const getAllBookings = async () => {
   });
 };
 
+const getDashboardStatsFromDB = async () => {
+  const [
+    totalUsers,
+    totalCustomers,
+    totalTechnicians,
+    totalServices,
+    totalBookings,
+    totalCategories,
+    totalReviews,
+    pendingBookings,
+    completedBookings,
+    totalRevenue,
+    pendingPayments,
+    completedPayments,
+  ] = await Promise.all([
+    prisma.user.count(),
+
+    prisma.user.count({
+      where: {
+        role: "CUSTOMER",
+      },
+    }),
+
+    prisma.user.count({
+      where: {
+        role: "TECHNICIAN",
+      },
+    }),
+
+    prisma.service.count(),
+
+    prisma.booking.count(),
+
+    prisma.category.count(),
+
+    prisma.review.count(),
+
+    prisma.booking.count({
+      where: {
+        status: BookingStatus.REQUESTED,
+      },
+    }),
+
+    prisma.booking.count({
+      where: {
+        status: BookingStatus.COMPLETED,
+      },
+    }),
+
+    prisma.payment.aggregate({
+      _sum: {
+        amount: true,
+      },
+      where: {
+        status: PaymentStatus.SUCCESS,
+      },
+    }),
+
+    prisma.payment.count({
+      where: {
+        status: PaymentStatus.PENDING,
+      },
+    }),
+
+    prisma.payment.count({
+      where: {
+        status: PaymentStatus.SUCCESS,
+      },
+    }),
+  ]);
+
+  return {
+    users: {
+      total: totalUsers,
+      customers: totalCustomers,
+      technicians: totalTechnicians,
+    },
+
+    services: totalServices,
+
+    categories: totalCategories,
+
+    bookings: {
+      total: totalBookings,
+      pending: pendingBookings,
+      completed: completedBookings,
+    },
+
+    payments: {
+      pending: pendingPayments,
+      completed: completedPayments,
+      totalRevenue: totalRevenue._sum.amount ?? 0,
+    },
+
+    reviews: totalReviews,
+  };
+};
+
 export const AdminService = {
   getAllUsers,
   updateUserStatus,
   getAllBookings,
+  getDashboardStatsFromDB,
 };

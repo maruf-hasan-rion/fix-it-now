@@ -51,6 +51,16 @@ const createReviewIntoDB = async (payload: IReview, userId: string) => {
 };
 
 const getServiceReviewsFromDB = async (serviceId: string) => {
+  const service = await prisma.service.findUnique({
+    where: {
+      id: serviceId,
+    },
+  });
+
+  if (!service) {
+    throw new AppError(httpStatus.NOT_FOUND, "Service not found");
+  }
+
   return prisma.review.findMany({
     where: {
       booking: {
@@ -61,7 +71,20 @@ const getServiceReviewsFromDB = async (serviceId: string) => {
     include: {
       customer: {
         select: {
+          id: true,
           name: true,
+        },
+      },
+      booking: {
+        select: {
+          id: true,
+          serviceId: true,
+          service: {
+            select: {
+              id: true,
+              title: true,
+            },
+          },
         },
       },
     },

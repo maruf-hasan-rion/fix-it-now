@@ -47,7 +47,7 @@ const getSingleBooking = catchAsync(
     sendResponse(res, {
       success: true,
       statusCode: httpStatus.OK,
-      message: "Service retrieved successfully",
+      message: "Booking retrieved successfully",
       data: result,
     });
   },
