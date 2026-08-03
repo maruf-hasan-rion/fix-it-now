@@ -35,6 +35,9 @@ export const auth = (...requiredRoles: Role[]) => {
         "You are not logged in. Please log in to access this resource."
       );
     }
+    console.log("Cookies:", req.cookies);
+console.log("Headers:", req.headers.cookie);
+console.log("Origin:", req.headers.origin);
 
     const verifiedToken = jwtUtils.verifyToken(token, config.jwt_access_secret);
 
@@ -74,6 +77,7 @@ export const auth = (...requiredRoles: Role[]) => {
     };
     console.log("Cookies:", req.cookies);
 console.log("Authorization:", req.headers.authorization);
+
 
    return next();
   });
