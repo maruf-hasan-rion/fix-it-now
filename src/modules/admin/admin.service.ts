@@ -1,7 +1,7 @@
 import httpStatus from "http-status";
 import { prisma } from "../../lib/prisma";
 import AppError from "../../utils/AppError";
-import { BookingStatus, PaymentStatus } from "../../../generated/prisma/enums";
+import { BookingStatus, PaymentStatus, UserStatus } from "../../../generated/prisma/enums";
 
 const getAllUsers = async () => {
   return prisma.user.findMany({
@@ -11,7 +11,10 @@ const getAllUsers = async () => {
   });
 };
 
-const updateUserStatus = async (userId: string, isBlocked: boolean) => {
+const updateUserStatusIntoDB = async (
+  userId: string,
+  status: UserStatus,
+) => {
   const user = await prisma.user.findUnique({
     where: {
       id: userId,
@@ -22,14 +25,24 @@ const updateUserStatus = async (userId: string, isBlocked: boolean) => {
     throw new AppError(httpStatus.NOT_FOUND, "User not found");
   }
 
-  return prisma.user.update({
+  const updatedUser = await prisma.user.update({
     where: {
       id: userId,
     },
     data: {
-      isBlocked,
+      status,
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      role: true,
+      status: true,
+      updatedAt: true,
     },
   });
+
+  return updatedUser;
 };
 
 const getAllBookings = async () => {
@@ -154,7 +167,7 @@ const getDashboardStatsFromDB = async () => {
 
 export const AdminService = {
   getAllUsers,
-  updateUserStatus,
+  updateUserStatusIntoDB,
   getAllBookings,
   getDashboardStatsFromDB,
 };

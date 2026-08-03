@@ -17,6 +17,11 @@ router.post(
   validateRequest(TechnicianValidation.createTechnicianSchema),
   TechnicianController.createProfile,
 );
+router.get(
+  "/availability",
+  auth(Role.TECHNICIAN),
+  TechnicianController.getAvailability
+);
 router.patch(
   "/availability",
   auth(Role.TECHNICIAN),
@@ -29,6 +34,11 @@ router.patch(
   auth(Role.TECHNICIAN),
   validateRequest(TechnicianValidation.updateTechnicianSchema),
   TechnicianController.updateProfile,
+);
+router.get(
+  "/overview",
+  auth(Role.TECHNICIAN),
+  TechnicianController.getTechnicianOverview
 );
 
 router.get("/me", auth(Role.TECHNICIAN), TechnicianController.getMyProfile);

@@ -9,8 +9,14 @@ const createBooking = async (bookingData: IBooking, customerId: string) => {
     where: {
       id: bookingData.serviceId,
     },
+    include: {
+      technician: true,
+    },
   });
-  if (!service) throw new AppError(httpStatus.NOT_FOUND, "Service not found");
+
+  if (!service) {
+    throw new AppError(httpStatus.NOT_FOUND, "Service not found");
+  }
 
   const technician = await prisma.technicianProfile.findUnique({
     where: {
@@ -19,14 +25,18 @@ const createBooking = async (bookingData: IBooking, customerId: string) => {
   });
 
   if (!technician?.isAvailable) {
-    throw new AppError(httpStatus.BAD_REQUEST, "Technician is not available");
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "Technician is not available"
+    );
   }
 
   const booking = await prisma.booking.create({
     data: {
-      customerId: customerId,
+      customerId,
       serviceId: bookingData.serviceId,
       bookingDate: new Date(bookingData.bookingDate),
+      timeSlot: bookingData.timeSlot,
       address: bookingData.address,
       note: bookingData.note ?? null,
     },
@@ -36,9 +46,9 @@ const createBooking = async (bookingData: IBooking, customerId: string) => {
 };
 
 const getAllBookings = async (customerId: string) => {
-  const bookings = await prisma.booking.findMany({
+  return prisma.booking.findMany({
     where: {
-      customerId: customerId,
+      customerId,
     },
     include: {
       service: {
@@ -46,11 +56,17 @@ const getAllBookings = async (customerId: string) => {
           category: true,
         },
       },
+      review: {
+        select: {
+          id: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
     },
   });
-  return bookings;
 };
-
 const getSingleBooking = async (bookingId: string) => {
   const booking = await prisma.booking.findUnique({
     where: {
@@ -104,7 +120,7 @@ const cancelBookingIntoDB = async (bookingId: string, userId: string) => {
   return result;
 };
 
-const getTechnicianBookings = async (technicianId: string) => {
+const getAssignedBookingsFromDB = async (technicianId: string) => {
   const profile = await prisma.technicianProfile.findUnique({
     where: {
       userId: technicianId,
@@ -162,6 +178,6 @@ export const BookingService = {
   getAllBookings,
   getSingleBooking,
   cancelBookingIntoDB,
-  getTechnicianBookings,
+  getAssignedBookingsFromDB,
   updateStatus,
 };

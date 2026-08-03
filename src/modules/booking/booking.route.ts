@@ -29,9 +29,9 @@ router.patch(
 
 // technician only route
 router.get(
-  "/technician",
+  "/assigned",
   auth(Role.TECHNICIAN),
-  BookingController.getTechnicianBookings,
+  BookingController.getAssignedBookings,
 );
 
 router.patch(

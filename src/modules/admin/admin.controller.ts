@@ -17,21 +17,6 @@ const getAllUsers = catchAsync(
   },
 );
 
-const updateUserStatus = catchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const id = req.params.id as string;
-
-    const result = await AdminService.updateUserStatus(id, req.body.isBlocked);
-
-    sendResponse(res, {
-      success: true,
-      statusCode: httpStatus.OK,
-      message: "User status updated successfully",
-      data: result,
-    });
-  },
-);
-
 const getAllBookings = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const result = await AdminService.getAllBookings();
@@ -58,10 +43,30 @@ const getDashboardStats = catchAsync(
   },
 );
 
+const updateUserStatus = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { userId } = req.params as { userId: string };
+    const { status } = req.body;
+
+    const result = await AdminService.updateUserStatusIntoDB(
+      userId,
+      status,
+    );
+
+    sendResponse(res, {
+      success: true,
+      statusCode: httpStatus.OK,
+      message: "User status updated successfully",
+      data: result,
+    });
+  },
+);
+
+
 
 export const AdminController = {
   getAllUsers,
   updateUserStatus,
   getAllBookings,
-   getDashboardStats,
+  getDashboardStats,
 };

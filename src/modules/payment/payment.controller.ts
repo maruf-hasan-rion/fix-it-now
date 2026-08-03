@@ -12,7 +12,6 @@ const createPaymentIntent = catchAsync(
       req.body.bookingId,
       userId as string,
     );
-
     sendResponse(res, {
       success: true,
       statusCode: httpStatus.OK,
@@ -24,7 +23,7 @@ const createPaymentIntent = catchAsync(
 
 const webhook = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    // console.log("Webhook hit");
+    console.log("Webhook hit");
     const event = req.body as Buffer;
     const signature = req.headers["stripe-signature"] as string;
 

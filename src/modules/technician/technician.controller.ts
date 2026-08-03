@@ -22,6 +22,17 @@ const createProfile = catchAsync(
     });
   },
 );
+const getAvailability = catchAsync(async (req, res) => {
+     const userId = req.user?.id as string;
+  const result = await technicianService.getAvailabilityFromDB(userId);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Availability retrieved successfully",
+    data: result,
+  });
+});
 
 const updateAvailability = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -55,7 +66,7 @@ const updateProfile = catchAsync(
       success: true,
       statusCode: httpStatus.CREATED,
       message: "Technician profile updated successfully",
-      data: { technician },
+      data:  technician,
     });
   },
 );
@@ -70,7 +81,7 @@ const getMyProfile = catchAsync(
       success: true,
       statusCode: httpStatus.OK,
       message: "Technician profile fetched successfully",
-      data: { profile },
+      data: profile ,
     });
   },
 );
@@ -86,10 +97,23 @@ const getAllTechnicians = catchAsync(
     });
   },
 );
+const getTechnicianOverview = catchAsync(async (req, res) => {
+  const userId = req.user?.id as string;
+  const result = await technicianService.getTechnicianOverviewIntoDB(userId);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: httpStatus.OK,
+    message: "Technician overview retrieved successfully",
+    data: result,
+  });
+});
 export const TechnicianController = {
   createProfile,
+  getAvailability,
   updateAvailability,
   updateProfile,
   getMyProfile,
   getAllTechnicians,
+  getTechnicianOverview
 };

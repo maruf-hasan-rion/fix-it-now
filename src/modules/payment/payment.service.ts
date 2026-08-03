@@ -6,11 +6,12 @@ import AppError from "../../utils/AppError";
 import httpStatus from "http-status";
 import config from "../../config";
 
-const createPaymentIntentIntoDB = async (bookingId: string, userId: string) => {
+const createPaymentIntentIntoDB = async (
+  bookingId: string,
+  userId: string
+) => {
   const booking = await prisma.booking.findUnique({
-    where: {
-      id: bookingId,
-    },
+    where: { id: bookingId },
     include: {
       service: true,
     },
@@ -19,54 +20,78 @@ const createPaymentIntentIntoDB = async (bookingId: string, userId: string) => {
   if (!booking) {
     throw new AppError(httpStatus.NOT_FOUND, "Booking not found");
   }
+
   if (booking.customerId !== userId) {
     throw new AppError(httpStatus.FORBIDDEN, "Unauthorized");
   }
+
   if (booking.status !== BookingStatus.ACCEPTED) {
-    throw new AppError(httpStatus.BAD_REQUEST, "Booking is not accepted yet");
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "Booking is not accepted yet"
+    );
   }
-  const payment = await prisma.payment.findUnique({
+
+  const existingPayment = await prisma.payment.findUnique({
     where: {
       bookingId,
     },
   });
-  if (payment?.status === PaymentStatus.SUCCESS) {
-    throw new AppError(httpStatus.BAD_REQUEST, "Booking already paid");
+
+  if (existingPayment?.status === PaymentStatus.SUCCESS) {
+    throw new AppError(
+      httpStatus.BAD_REQUEST,
+      "Booking already paid"
+    );
   }
-  const paymentIntent = await stripe.paymentIntents.create({
-    amount: Math.round(booking.service.price * 100),
-    currency: "bdt",
-    automatic_payment_methods: {
-      enabled: true,
-    },
-    metadata: {
-      bookingId: booking.id,
-    },
-  });
-  await prisma.payment.upsert({
-    where: {
-      bookingId,
-    },
-    update: {
-      transactionId: paymentIntent.id,
-      amount: booking.service.price,
-      status: PaymentStatus.PENDING,
-    },
-    create: {
-      bookingId,
-      transactionId: paymentIntent.id,
-      amount: booking.service.price,
-    },
-  });
+
+  let paymentIntent: Stripe.PaymentIntent;
+
+  // Reuse existing pending PaymentIntent
+  if (
+    existingPayment &&
+    existingPayment.status === PaymentStatus.PENDING
+  ) {
+    paymentIntent = await stripe.paymentIntents.retrieve(
+      existingPayment.transactionId
+    );
+  } else {
+    paymentIntent = await stripe.paymentIntents.create({
+      amount: Math.round(booking.service.price * 100),
+      currency: "bdt",
+      automatic_payment_methods: {
+        enabled: true,
+      },
+      metadata: {
+        bookingId: booking.id,
+      },
+    });
+
+    await prisma.payment.upsert({
+      where: {
+        bookingId,
+      },
+      update: {
+        transactionId: paymentIntent.id,
+        amount: booking.service.price,
+        status: PaymentStatus.PENDING,
+      },
+      create: {
+        bookingId,
+        transactionId: paymentIntent.id,
+        amount: booking.service.price,
+        status: PaymentStatus.PENDING,
+      },
+    });
+  }
 
   return {
     paymentId: paymentIntent.id,
-    clientSecret: paymentIntent.client_secret,
+    clientSecret: paymentIntent.client_secret!,
   };
 };
-
 const handleWebhook = async (payload: Buffer, signature: string) => {
-  //   console.log("Webhook received");
+    console.log("Webhook received");
 
   let event: Stripe.Event;
 
@@ -77,7 +102,7 @@ const handleWebhook = async (payload: Buffer, signature: string) => {
       config.stripe_webhook_secret,
     );
 
-    // console.log("Event:", event.type);
+    console.log("Event:", event.type);
   } catch (err) {
     console.log(err);
     throw new AppError(httpStatus.BAD_REQUEST, "Invalid webhook signature");
@@ -93,38 +118,52 @@ const handleWebhook = async (payload: Buffer, signature: string) => {
 
 const paymentSucceeded = async (paymentIntent: Stripe.PaymentIntent) => {
   console.log("Webhook PaymentIntent:", paymentIntent.id);
+
   const payment = await prisma.payment.findUnique({
     where: {
       transactionId: paymentIntent.id,
     },
   });
-  console.log("DB Payment:", payment);
-  if (!payment) {
-    return;
-  }
+
+  console.log("Found Payment:", payment);
+
+  if (!payment) return;
+
   if (payment.status === PaymentStatus.SUCCESS) {
+    console.log("Already paid");
     return;
   }
-  await prisma.$transaction(async (tx) => {
-    await tx.payment.update({
-      where: {
-        id: payment.id,
-      },
 
-      data: {
-        status: PaymentStatus.SUCCESS,
-      },
-    });
-    await tx.booking.update({
-      where: {
-        id: payment.bookingId,
-      },
+  try {
+    await prisma.$transaction(async (tx) => {
+      await tx.payment.update({
+        where: {
+          id: payment.id,
+        },
+        data: {
+          status: PaymentStatus.SUCCESS,
+          paidAt: new Date(),
+        },
+      });
 
-      data: {
-        status: BookingStatus.PAID,
-      },
+      console.log("Payment updated");
+
+      await tx.booking.update({
+        where: {
+          id: payment.bookingId,
+        },
+        data: {
+          status: BookingStatus.PAID,
+        },
+      });
+
+      console.log("Booking updated");
     });
-  });
+
+    console.log("Transaction completed");
+  } catch (err) {
+    console.error(err);
+  }
 };
 
 const getMyPayments = async (userId: string) => {

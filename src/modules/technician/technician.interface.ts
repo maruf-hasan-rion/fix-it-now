@@ -16,4 +16,9 @@ export interface IUpdateTechnicianProfile {
   hourlyRate?: number;
   location?: string;
   isAvailable?: boolean;
+  user: {
+    name?: string;
+    phone?: string;
+  };
+
 }

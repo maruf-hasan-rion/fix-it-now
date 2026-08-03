@@ -69,10 +69,10 @@ const cancelBooking = catchAsync(
   },
 );
 
-const getTechnicianBookings = catchAsync(
+const getAssignedBookings = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const technicianId = req.user?.id;
-    const result = await BookingService.getTechnicianBookings(
+    const result = await BookingService.getAssignedBookingsFromDB(
       technicianId as string,
     );
 
@@ -112,6 +112,6 @@ export const BookingController = {
   getMyBookings,
   cancelBooking,
   getSingleBooking,
-  getTechnicianBookings,
+  getAssignedBookings,
   updateStatus,
 };

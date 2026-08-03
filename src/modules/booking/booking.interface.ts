@@ -3,6 +3,7 @@ import type { BookingStatus } from "../../../generated/prisma/enums";
 export interface IBooking {
   serviceId: string;
   bookingDate: Date;
+  timeSlot: string;
   address: string;
   note?: string;
 }
