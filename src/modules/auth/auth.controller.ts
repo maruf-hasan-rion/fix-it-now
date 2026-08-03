@@ -25,17 +25,29 @@ const loginUser = catchAsync(
 
     const { accessToken, refreshToken } = await authService.loginUser(payload);
 
+    // res.cookie("accessToken", accessToken, {
+    //   httpOnly: true,
+    //   secure: false,
+    //   sameSite: "none",
+    //   maxAge: 1000 * 60 * 60 * 24,
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
-      secure: false,
+      secure: true,
       sameSite: "none",
+      path: "/",
       maxAge: 1000 * 60 * 60 * 24,
     });
 
+    // res.cookie("refreshToken", refreshToken, {
+    //   httpOnly: true,
+    //   secure: false,
+    //   sameSite: "none",
+    //   maxAge: 1000 * 60 * 60 * 24 * 7,
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: false,
+      secure: true,
       sameSite: "none",
+      path: "/",
       maxAge: 1000 * 60 * 60 * 24 * 7,
     });
 
@@ -54,10 +66,17 @@ const refreshToken = catchAsync(
 
     const { accessToken } = await authService.refreshToken(refreshToken);
 
+    // res.cookie("accessToken", accessToken, {
+    //   httpOnly: true,
+    //   secure: true,
+    //   sameSite: "none",
+    //   path: "/",
+    //   maxAge: 1000 * 60 * 60 * 24,
     res.cookie("accessToken", accessToken, {
       httpOnly: true,
-      secure: false,
+      secure: true,
       sameSite: "none",
+      path: "/",
       maxAge: 1000 * 60 * 60 * 24,
     });
 
