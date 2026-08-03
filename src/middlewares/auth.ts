@@ -72,6 +72,8 @@ export const auth = (...requiredRoles: Role[]) => {
       name: user.name,
       role: user.role,
     };
+    console.log("Cookies:", req.cookies);
+console.log("Authorization:", req.headers.authorization);
 
    return next();
   });

@@ -21,9 +21,12 @@ const app: Application = express();
 
 app.use(
   cors({
-    origin: config.app_url,
+    origin: [
+      "http://localhost:3000",
+      "https://fix-it-now-frontend-ten.vercel.app",
+    ],
     credentials: true,
-  }),
+  })
 );
 app.use("/api/payment/webhook", express.raw({ type: "application/json" }));
 app.use(express.json());
