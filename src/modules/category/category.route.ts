@@ -7,22 +7,33 @@ import validateRequest from "../../middlewares/validateRequest";
 
 const router = Router();
 
+// Public
 router.get("/", CategoryController.getAllCategories);
-// router.get("/:id", CategoryController.getSingleCategory);
 
-// admin routes
+router.get(
+  "/:id",
+  CategoryController.getSingleCategory,
+);
+
+// Admin
 router.post(
   "/",
   auth(Role.ADMIN),
   validateRequest(CategoryValidation.createCategorySchema),
   CategoryController.createCategory,
 );
-// router.patch(
-//   "/:id",
-//   auth(Role.ADMIN),
-//   validateRequest(CategoryValidation.updateCategorySchema),
-//   CategoryController.updateCategory,
-// );
-// router.delete("/:id", auth(Role.ADMIN), CategoryController.deleteCategory);
+
+router.patch(
+  "/:id",
+  auth(Role.ADMIN),
+  validateRequest(CategoryValidation.updateCategorySchema),
+  CategoryController.updateCategory,
+);
+
+router.delete(
+  "/:id",
+  auth(Role.ADMIN),
+  CategoryController.deleteCategory,
+);
 
 export const categoryRoutes = router;
